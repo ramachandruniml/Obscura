@@ -1,0 +1,11 @@
+# Normalize line endings to LF in the repo (CI + Docker images run on Linux).
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.mp4 binary
+*.pt binary
+*.pth binary
+*.onnx binary

@@ -1,0 +1,6 @@
+# Model weights are downloaded/exported here at setup time, never committed.
+# Expected files (see .env.example):
+#   retinaface_mobilenet0.25.pth   - biubug6 Pytorch_Retinaface (MobileNet0.25)
+#   retinaface_resnet50.pth        - biubug6 Pytorch_Retinaface (ResNet50, optional)
+#   yolov8n-face.pt                - YOLOv8-face weights
+#   detector.onnx                  - produced by scripts/export_onnx.py

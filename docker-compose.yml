@@ -1,0 +1,86 @@
+# Obscura — privacy-preserving face redaction
+#
+# Services:
+#   redis     - broker + result backend for Celery
+#   api       - FastAPI (async endpoints, OpenAPI docs at /docs)
+#   worker    - Celery worker: runs the video/image redaction pipeline
+#   beat      - Celery beat: sweeps STORAGE_DIR on RESULT_TTL_SECONDS
+#   frontend  - React build served by nginx, proxies /api -> api:8000
+#
+# GPU: `docker compose -f docker-compose.yml -f docker-compose.gpu.yml up`
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8000
+      ${UVICORN_RELOAD:+--reload}
+    env_file: .env
+    environment:
+      - STORAGE_DIR=/data
+    volumes:
+      - obscura-data:/data
+      - ./backend/weights:/app/weights
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz').status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: ["celery", "-A", "app.worker.celery_app.celery", "worker", "--loglevel=INFO", "--concurrency=1"]
+    env_file: .env
+    environment:
+      - STORAGE_DIR=/data
+    volumes:
+      - obscura-data:/data
+      - ./backend/weights:/app/weights
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: ["celery", "-A", "app.worker.celery_app.celery", "beat", "--loglevel=INFO"]
+    env_file: .env
+    environment:
+      - STORAGE_DIR=/data
+    volumes:
+      - obscura-data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+volumes:
+  obscura-data:

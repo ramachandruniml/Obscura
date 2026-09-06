@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Node
+node_modules/
+frontend/dist/
+*.local
+
+# Models / weights (downloaded or exported, never committed)
+backend/weights/*
+!backend/weights/.gitkeep
+*.onnx
+*.pth
+*.pt
+
+# Data / runtime artifacts
+data/
+*.log
+
+# Benchmark outputs (generated)
+docs/benchmarks/*.md
+!docs/benchmarks/.gitkeep
+
+# Datasets
+datasets/
+WIDER_*/
+wider_face_split/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/

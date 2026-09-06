@@ -1,0 +1,15 @@
+This package is a trimmed and lightly cleaned vendoring of the model definition,
+prior-box generation, and box/landmark decoding from:
+
+    biubug6 / Pytorch_Retinaface
+    https://github.com/biubug6/Pytorch_Retinaface
+    License: MIT (Copyright (c) 2019 biubug6)
+
+Changes from upstream:
+  - Combined models/net.py, models/retinaface.py, layers/functions/prior_box.py,
+    utils/box_utils.py, and data/config.py into this package.
+  - NMS uses torchvision.ops.nms instead of the bundled numpy implementation.
+  - Training-only code paths, losses, and the anchor-matching utilities removed.
+  - Type hints and docstrings added; formatting normalized to this repo's style.
+
+The upstream MIT license text is reproduced in LICENSE alongside this file.

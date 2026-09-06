@@ -1,0 +1,28 @@
+# GPU override. Requires NVIDIA Container Toolkit on the host.
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up --build
+#
+# Note: backend/Dockerfile installs CPU torch wheels by default. For real GPU
+# inference set BUILD_TORCH_VARIANT=cu121 (see backend/Dockerfile) so the CUDA
+# wheels are installed, then use this override to expose the device.
+services:
+  worker:
+    environment:
+      - DEVICE=cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  api:
+    environment:
+      - DEVICE=cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

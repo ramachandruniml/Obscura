@@ -1,0 +1,3 @@
+# Generated benchmark reports land here (git-ignored):
+#   widerface.md      - scripts/benchmark_widerface.py  (Deliverable 6)
+#   onnx-latency.md   - scripts/export_onnx.py          (Deliverable 7)

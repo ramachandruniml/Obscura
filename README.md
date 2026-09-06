@@ -7,7 +7,7 @@ face; keep IDs stable across video frames so redaction doesn't flicker.
 **Not** face recognition. No identity matching, no embeddings, no stored frames.
 Uploads and results auto-delete after a configurable TTL (default 1 hour).
 
-> Status: **Deliverable 4/10 complete** — redaction module.
+> Status: **Deliverable 5/10 complete** — API + Celery + pipelines wired end to end.
 > See the deliverable checklist below.
 
 ---
@@ -18,7 +18,7 @@ Uploads and results auto-delete after a configurable TTL (default 1 hour).
 - [x] 2. Detector interface + RetinaFace + YOLOv8-face
 - [x] 3. Tracking module (ByteTrack)
 - [x] 4. Redaction module (blur / pixelate / box)
-- [ ] 5. FastAPI endpoints + Celery job queue
+- [x] 5. FastAPI endpoints + Celery job queue
 - [ ] 6. Benchmark script + WIDER FACE report
 - [ ] 7. ONNX export + latency comparison report
 - [ ] 8. React frontend
@@ -41,6 +41,18 @@ docker compose up --build
 | http://localhost:3000 | Frontend |
 | http://localhost:8000/docs | API (OpenAPI / Swagger) |
 | http://localhost:8000/healthz | Health check |
+
+### API
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/redact` | multipart: `file` (image/video) + `method` (`blur`\|`pixelate`\|`box`) + `confidence` (0–1). Returns `202 {job_id, status}`. |
+| `GET` | `/jobs/{id}` | Job status (`pending`\|`processing`\|`complete`\|`failed`), `stats`, and `result_url` when done. |
+| `GET` | `/jobs/{id}/result` | The redacted file (image keeps its format; video is always `.mp4`). `404` until complete or after TTL. |
+
+Errors: `415` unsupported type, `413` too large, `422` corrupt / video too long, `400` bad method/confidence, `404` unknown or expired job.
+
+Without Docker you can run the whole thing in one process — set `CELERY_TASK_ALWAYS_EAGER=true` and `pip install -e ".[dev]"`, then `uvicorn app.main:app`.
 
 GPU (needs NVIDIA Container Toolkit + a CUDA torch build — see `backend/Dockerfile`
 `BUILD_TORCH_VARIANT`):

@@ -13,13 +13,111 @@ when those files are absent (see `_weights_present` / `face_image`).
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import cv2
 import numpy as np
 import pytest
+from app.config import settings
+from app.detectors.base import Detection, Detector
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
+
+
+# --------------------------------------------------------------------------- #
+# D5: storage isolation, eager celery, fake detector, video factory            #
+# --------------------------------------------------------------------------- #
+@pytest.fixture(autouse=True)
+def isolate_storage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Point settings.storage_dir at a per-test temp dir (autouse: harmless elsewhere)."""
+    d = tmp_path / "obscura-data"
+    monkeypatch.setattr(settings, "storage_dir", d)
+    return d
+
+
+@pytest.fixture
+def eager_celery(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.worker.celery_app import celery
+
+    monkeypatch.setattr(celery.conf, "task_always_eager", True)
+    monkeypatch.setattr(celery.conf, "task_eager_propagates", True)
+
+
+class _FakeDetector(Detector):
+    """Returns a fixed set of detections, filtered by the confidence contract."""
+
+    name = "fake"
+    provides_landmarks = False
+
+    def __init__(self, boxes: Sequence[Detection]) -> None:
+        super().__init__()
+        self._boxes = list(boxes)
+
+    def _detect(self, frame: np.ndarray, confidence: float) -> list[Detection]:
+        return list(self._boxes)
+
+
+@pytest.fixture
+def make_fake_detector() -> Callable[[Sequence[Detection]], _FakeDetector]:
+    return _FakeDetector
+
+
+@pytest.fixture
+def patch_detector(
+    monkeypatch: pytest.MonkeyPatch,
+) -> Callable[[Detector], None]:
+    def _patch(detector: Detector) -> None:
+        monkeypatch.setattr("app.pipeline.runner.get_cached_detector", lambda: detector)
+
+    return _patch
+
+
+@pytest.fixture
+def make_video() -> Callable[..., Path]:
+    def _make(
+        path: Path,
+        *,
+        n_frames: int = 12,
+        w: int = 64,
+        h: int = 48,
+        fps: int = 10,
+        with_audio: bool = False,
+    ) -> Path:
+        import av
+
+        container = av.open(str(path), mode="w")
+        vstream = container.add_stream("libx264", rate=fps)
+        vstream.width, vstream.height = w, h
+        vstream.pix_fmt = "yuv420p"
+
+        astream = None
+        if with_audio:
+            astream = container.add_stream("aac", rate=44100)
+
+        rng = np.random.default_rng(7)
+        for i in range(n_frames):
+            arr = np.full((h, w, 3), (i * 7) % 256, dtype=np.uint8)
+            arr[:, :, 1] = rng.integers(0, 255)
+            frame = av.VideoFrame.from_ndarray(arr, format="bgr24")
+            for pkt in vstream.encode(frame):
+                container.mux(pkt)
+        for pkt in vstream.encode():
+            container.mux(pkt)
+
+        if astream is not None:
+            samples = np.zeros((1, 44100 * n_frames // fps), dtype=np.int16)
+            aframe = av.AudioFrame.from_ndarray(samples, format="s16", layout="mono")
+            aframe.sample_rate = 44100
+            for pkt in astream.encode(aframe):
+                container.mux(pkt)
+            for pkt in astream.encode():
+                container.mux(pkt)
+
+        container.close()
+        return path
+
+    return _make
 
 
 # --------------------------------------------------------------------------- #

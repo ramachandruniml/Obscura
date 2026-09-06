@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     redis_url: str = "redis://redis:6379/0"
     celery_broker_url: str = "redis://redis:6379/0"
     celery_result_backend: str = "redis://redis:6379/1"
+    celery_task_always_eager: bool = False  # True -> run jobs inline (tests / no broker)
+
+    # --- Pipeline / output ------------------------------------------------
+    delete_input_on_success: bool = True
+    video_output_codec: str = "libx264"
+    video_output_crf: int = 23
+    video_output_pix_fmt: str = "yuv420p"
 
     # --- Storage / retention -------------------------------------------------
     storage_dir: Path = Path("/data")

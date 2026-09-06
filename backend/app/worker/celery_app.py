@@ -1,8 +1,7 @@
-"""Celery application.
+"""Celery application: broker/backend wiring, task defaults, and the TTL beat job.
 
-Skeleton for now: app object + beat schedule for TTL cleanup. The redaction
-tasks (``run_image_job`` / ``run_video_job``) are added in Deliverable 5; the
-cleanup task body lands with the storage module (Deliverable 5) too.
+Set ``CELERY_TASK_ALWAYS_EAGER=true`` to run jobs inline in the calling process
+(used by the API tests, and usable for a broker-less local run).
 """
 
 from __future__ import annotations
@@ -30,6 +29,8 @@ celery.conf.update(
     task_soft_time_limit=60 * 25,
     worker_max_tasks_per_child=20,
     result_expires=settings.result_ttl_seconds,
+    task_always_eager=settings.celery_task_always_eager,
+    task_eager_propagates=True,
     beat_schedule={
         "sweep-expired-artifacts": {
             "task": "app.worker.tasks.sweep_expired_artifacts",

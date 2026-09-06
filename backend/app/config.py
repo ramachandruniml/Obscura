@@ -77,7 +77,10 @@ class Settings(BaseSettings):
     default_redaction: Literal["blur", "pixelate", "box"] = "blur"
     box_padding_ratio: float = 0.15
     blur_kernel_fraction: float = 0.25
+    blur_min_kernel: int = 15
+    blur_passes: int = 2
     pixelate_blocks: int = 12
+    solid_box_color: tuple[int, int, int] = (0, 0, 0)  # BGR
 
     # --- Video tracking -----------------------------------------------------
     detect_every_n_frames: int = 5
@@ -93,6 +96,14 @@ class Settings(BaseSettings):
     def _split_csv(cls, v: object) -> object:
         if isinstance(v, str):
             return [item.strip() for item in v.split(",") if item.strip()]
+        return v
+
+    @field_validator("solid_box_color", mode="before")
+    @classmethod
+    def _parse_bgr(cls, v: object) -> object:
+        if isinstance(v, str):
+            parts = [int(p) for p in v.replace("(", "").replace(")", "").split(",") if p.strip()]
+            return tuple(parts)
         return v
 
     @property

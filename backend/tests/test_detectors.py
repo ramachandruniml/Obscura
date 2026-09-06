@@ -195,9 +195,11 @@ class TestRegistry:
         with pytest.raises(ValueError, match="unknown detector backend"):
             get_detector_class("deepface")
 
-    def test_onnx_runtime_not_yet_supported(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_onnx_runtime_routes_to_onnx_detector(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # wiring reaches OnnxFaceDetector; it only fails here because no .onnx exists
         monkeypatch.setattr("app.detectors.registry.settings.detector_runtime", "onnx")
-        with pytest.raises(NotImplementedError, match="Deliverable 7"):
+        monkeypatch.setattr("app.config.settings.onnx_model_path", "weights/_absent_.onnx")
+        with pytest.raises(FileNotFoundError, match="ONNX model not found"):
             build_detector()
 
 

@@ -76,6 +76,7 @@ class Settings(BaseSettings):
     yolov8_face_weights: Path = Path("weights/yolov8n-face.pt")
     yolov8_input_size: int = 640
     onnx_model_path: Path = Path("weights/detector.onnx")
+    onnx_opset: int = 12
     default_confidence: float = 0.5
     nms_iou: float = 0.4
     max_faces: int = 500

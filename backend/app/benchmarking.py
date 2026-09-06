@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import time
 from collections import Counter
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -323,6 +323,79 @@ def render_report(results: Sequence[BenchmarkResult], meta: dict[str, str]) -> s
         "",
     ]
     cmd = meta.get("command", "python scripts/benchmark_widerface.py --data-root <path>")
+    lines.append(f"Command: `{cmd}`")
+    lines.append("")
+    return "\n".join(lines)
+
+
+# --------------------------------------------------------------------------- #
+# Latency measurement (PyTorch vs ONNX Runtime)                                #
+# --------------------------------------------------------------------------- #
+@dataclass(slots=True)
+class LatencyStats:
+    label: str
+    n: int
+    mean_ms: float
+    p50_ms: float
+    p95_ms: float
+    fps: float
+
+
+def measure_latency(
+    fn: Callable[[object], object], inputs: Sequence, *, warmup: int = 5, label: str = ""
+) -> LatencyStats:
+    """Time ``fn(x)`` for each x in ``inputs`` (after ``warmup`` untimed calls)."""
+    for x in inputs[: max(0, warmup)]:
+        fn(x)
+    times: list[float] = []
+    for x in inputs:
+        t0 = time.perf_counter()
+        fn(x)
+        times.append((time.perf_counter() - t0) * 1000.0)
+    arr = np.asarray(times) if times else np.zeros(1)
+    mean = float(arr.mean())
+    return LatencyStats(
+        label=label,
+        n=len(times),
+        mean_ms=mean,
+        p50_ms=float(np.percentile(arr, 50)),
+        p95_ms=float(np.percentile(arr, 95)),
+        fps=(1000.0 / mean) if mean > 0 else 0.0,
+    )
+
+
+def render_latency_report(
+    baseline: LatencyStats, optimized: LatencyStats, meta: dict[str, str]
+) -> str:
+    now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
+    speedup = baseline.mean_ms / optimized.mean_ms if optimized.mean_ms > 0 else 0.0
+    lines = [
+        "# PyTorch vs ONNX Runtime — inference latency",
+        "",
+        f"_Generated {now}_",
+        "",
+        "| Field | Value |",
+        "|---|---|",
+    ]
+    lines += [f"| {k} | {v} |" for k, v in meta.items()]
+    lines += [
+        "",
+        "| Runtime | Mean (ms) | p50 (ms) | p95 (ms) | FPS | Speedup |",
+        "|---|---|---|---|---|---|",
+        f"| {baseline.label} | {baseline.mean_ms:.2f} | {baseline.p50_ms:.2f} "
+        f"| {baseline.p95_ms:.2f} | {baseline.fps:.1f} | 1.00x |",
+        f"| {optimized.label} | {optimized.mean_ms:.2f} | {optimized.p50_ms:.2f} "
+        f"| {optimized.p95_ms:.2f} | {optimized.fps:.1f} | {speedup:.2f}x |",
+        "",
+        "## Notes",
+        "",
+        f"- {baseline.n} timed inferences each, after a warmup pass; timing wraps "
+        "`detector.detect()` (letterbox + forward + decode + NMS), decode of the "
+        "source image excluded.",
+        "- Same frames fed to both runtimes.",
+        "",
+    ]
+    cmd = meta.get("command", "python scripts/export_onnx.py")
     lines.append(f"Command: `{cmd}`")
     lines.append("")
     return "\n".join(lines)

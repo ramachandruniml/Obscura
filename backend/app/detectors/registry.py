@@ -17,10 +17,17 @@ _DETECTOR_CLASSES: dict[str, str] = {
     "retinaface": "app.detectors.retinaface:RetinaFaceDetector",
     "yolov8face": "app.detectors.yolov8_face:YOLOv8FaceDetector",
 }
+_ONNX_CLASS = "app.detectors.onnx_detector:OnnxFaceDetector"
 
 VALID_BACKENDS = tuple(_DETECTOR_CLASSES)
 
 _cache: dict[tuple[str, str, str], Detector] = {}
+
+
+def _resolve(target: str) -> type[Detector]:
+    module_name, _, attr = target.partition(":")
+    module = __import__(module_name, fromlist=[attr])
+    return getattr(module, attr)
 
 
 def get_detector_class(backend: str) -> type[Detector]:
@@ -31,21 +38,16 @@ def get_detector_class(backend: str) -> type[Detector]:
         raise ValueError(
             f"unknown detector backend {backend!r}; valid: {', '.join(VALID_BACKENDS)}"
         ) from None
-    module_name, _, attr = target.partition(":")
-    module = __import__(module_name, fromlist=[attr])
-    return getattr(module, attr)
+    return _resolve(target)
 
 
 def build_detector(cfg: Settings | None = None, **overrides: object) -> Detector:
-    """Instantiate the configured detector (loads weights)."""
+    """Instantiate the configured detector (loads weights / the ONNX session)."""
     cfg = cfg or settings
     if cfg.detector_runtime == "onnx":
-        raise NotImplementedError(
-            "ONNX runtime detector is added in Deliverable 7 (scripts/export_onnx.py). "
-            "Set DETECTOR_RUNTIME=pytorch for now."
-        )
-    cls = get_detector_class(cfg.detector_backend)
-    detector = cls(**overrides)  # type: ignore[call-arg]
+        detector = _resolve(_ONNX_CLASS)(**overrides)  # type: ignore[call-arg]
+    else:
+        detector = get_detector_class(cfg.detector_backend)(**overrides)  # type: ignore[call-arg]
     log.info("detector.built", backend=cfg.detector_backend, runtime=cfg.detector_runtime)
     return detector
 

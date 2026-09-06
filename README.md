@@ -7,7 +7,7 @@ face; keep IDs stable across video frames so redaction doesn't flicker.
 **Not** face recognition. No identity matching, no embeddings, no stored frames.
 Uploads and results auto-delete after a configurable TTL (default 1 hour).
 
-> Status: **Deliverable 5/10 complete** — API + Celery + pipelines wired end to end.
+> Status: **Deliverable 6/10 complete** — WIDER FACE benchmark script.
 > See the deliverable checklist below.
 
 ---
@@ -19,7 +19,7 @@ Uploads and results auto-delete after a configurable TTL (default 1 hour).
 - [x] 3. Tracking module (ByteTrack)
 - [x] 4. Redaction module (blur / pixelate / box)
 - [x] 5. FastAPI endpoints + Celery job queue
-- [ ] 6. Benchmark script + WIDER FACE report
+- [x] 6. Benchmark script + WIDER FACE report
 - [ ] 7. ONNX export + latency comparison report
 - [ ] 8. React frontend
 - [ ] 9. GitHub Actions CI

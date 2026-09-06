@@ -18,7 +18,9 @@ dependencies = [
     "torch>=2.5,<2.7",
     "torchvision>=0.20,<0.22",
     "ultralytics>=8.3,<8.4",
-    "supervision>=0.25,<0.26",
+    # ByteTrack lives in sv.ByteTrack through 0.27; deprecated in 0.28, removed in
+    # 0.31 (moved to the separate `trackers` package). Pinned to the stable range.
+    "supervision>=0.25,<0.28",
     "onnx>=1.17",
     "onnxruntime>=1.20",
     "av>=13.1",

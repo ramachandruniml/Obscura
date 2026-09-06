@@ -85,6 +85,8 @@ class Settings(BaseSettings):
     min_matching_threshold: float = 0.8
     track_buffer_frames: int = 30
     track_lost_padding_ratio: float = 0.30
+    track_fps_default: int = 30
+    track_max_coast_frames: int = 0  # <= 0 -> auto (3 * detect_every_n_frames)
 
     @field_validator("cors_origins", "allowed_image_types", "allowed_video_types", mode="before")
     @classmethod

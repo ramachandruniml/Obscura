@@ -7,7 +7,7 @@ face; keep IDs stable across video frames so redaction doesn't flicker.
 **Not** face recognition. No identity matching, no embeddings, no stored frames.
 Uploads and results auto-delete after a configurable TTL (default 1 hour).
 
-> Status: **Deliverable 2/10 complete** — detector interface + both backends.
+> Status: **Deliverable 3/10 complete** — ByteTrack tracking module.
 > See the deliverable checklist below.
 
 ---
@@ -16,7 +16,7 @@ Uploads and results auto-delete after a configurable TTL (default 1 hour).
 
 - [x] 1. Project structure + Docker Compose skeleton
 - [x] 2. Detector interface + RetinaFace + YOLOv8-face
-- [ ] 3. Tracking module (ByteTrack)
+- [x] 3. Tracking module (ByteTrack)
 - [ ] 4. Redaction module (blur / pixelate / box)
 - [ ] 5. FastAPI endpoints + Celery job queue
 - [ ] 6. Benchmark script + WIDER FACE report

@@ -1,5 +1,7 @@
 # Obscura
 
+[![ci](https://github.com/ramachandruniml/Obscura/actions/workflows/ci.yml/badge.svg)](https://github.com/ramachandruniml/Obscura/actions/workflows/ci.yml)
+
 Automatic face **detection + redaction** for images and video, so footage can be
 shared publicly without exposing bystanders. Blur, pixelate, or black-box every
 face; keep IDs stable across video frames so redaction doesn't flicker.
@@ -7,7 +9,7 @@ face; keep IDs stable across video frames so redaction doesn't flicker.
 **Not** face recognition. No identity matching, no embeddings, no stored frames.
 Uploads and results auto-delete after a configurable TTL (default 1 hour).
 
-> Status: **Deliverable 8/10 complete** — React frontend.
+> Status: **Deliverable 9/10 complete** — GitHub Actions CI.
 > See the deliverable checklist below.
 
 ---
@@ -22,8 +24,18 @@ Uploads and results auto-delete after a configurable TTL (default 1 hour).
 - [x] 6. Benchmark script + WIDER FACE report
 - [x] 7. ONNX export + latency comparison report
 - [x] 8. React frontend
-- [ ] 9. GitHub Actions CI
+- [x] 9. GitHub Actions CI
 - [ ] 10. README finalization + architecture diagram + benchmark results
+
+## CI
+
+`.github/workflows/ci.yml` runs on every push and PR:
+
+| Job | Steps |
+|---|---|
+| `backend` | `uv` install (CPU torch) → `ruff check` + `ruff format --check` → `pytest` (with `--cov=app`) |
+| `frontend` | `npm ci` → `eslint` → `tsc --noEmit` → `vitest run` → `vite build` |
+| `docker` | builds the `backend/` and `frontend/` images (gated on the two jobs above; GHA layer cache) |
 
 ---
 

@@ -1,0 +1,26 @@
+# Build context is ./backend (see docker-compose.yml / .github/workflows/ci.yml),
+# so this file — not the repo-root .dockerignore — governs the backend image.
+**/__pycache__
+**/*.pyc
+.venv
+venv
+.pytest_cache
+.ruff_cache
+.mypy_cache
+htmlcov
+.coverage
+coverage.xml
+*.log
+
+# Model weights are fetched at runtime, never baked in.
+weights/*
+!weights/.gitkeep
+
+# Test fixtures / datasets never belong in the image.
+tests/fixtures/*
+!tests/fixtures/.gitkeep
+datasets/
+
+.env
+.env.*
+!.env.example

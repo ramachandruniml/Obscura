@@ -15,6 +15,7 @@ coverage.xml
 node_modules/
 frontend/dist/
 *.local
+*.tsbuildinfo
 
 # Models / weights (downloaded or exported, never committed)
 backend/weights/*

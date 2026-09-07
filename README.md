@@ -7,7 +7,7 @@ face; keep IDs stable across video frames so redaction doesn't flicker.
 **Not** face recognition. No identity matching, no embeddings, no stored frames.
 Uploads and results auto-delete after a configurable TTL (default 1 hour).
 
-> Status: **Deliverable 7/10 complete** — ONNX export + latency comparison.
+> Status: **Deliverable 8/10 complete** — React frontend.
 > See the deliverable checklist below.
 
 ---
@@ -21,7 +21,7 @@ Uploads and results auto-delete after a configurable TTL (default 1 hour).
 - [x] 5. FastAPI endpoints + Celery job queue
 - [x] 6. Benchmark script + WIDER FACE report
 - [x] 7. ONNX export + latency comparison report
-- [ ] 8. React frontend
+- [x] 8. React frontend
 - [ ] 9. GitHub Actions CI
 - [ ] 10. README finalization + architecture diagram + benchmark results
 

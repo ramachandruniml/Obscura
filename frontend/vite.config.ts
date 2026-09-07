@@ -1,6 +1,5 @@
-/// <reference types="vitest/config" />
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 // In dev, proxy /api to the FastAPI container/host so the browser sees a
 // same-origin API (matches the nginx setup used in Docker Compose).

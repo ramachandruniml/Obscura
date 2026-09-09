@@ -39,37 +39,31 @@ cp .env.example .env
 The defaults work as-is. Every knob is documented in `.env.example` and read by
 `backend/app/config.py`.
 
-### 3. Model weights  ⚠️ **the one manual step**
+### 3. Model weights
 
-Weights are **not** committed and **not** fully auto-downloaded. Put them in
-`backend/weights/` (mounted into the `api` and `worker` containers).
+Not committed. Download them into `backend/weights/` (bind-mounted into the `api`
+and `worker` containers). You don't need `uv` for this — any Python works, the
+script only uses the stdlib:
 
 ```bash
-cd backend
-uv run python scripts/fetch_weights.py            # or: python scripts/fetch_weights.py
+python backend/scripts/fetch_weights.py
 ```
 
-- **YOLOv8-face** — the script tries to download `yolov8n-face.pt` from the
-  `akanametov/yolo-face` releases. If that URL 404s, grab any YOLOv8-face `.pt`
-  (e.g. from a HuggingFace mirror) and save it as `backend/weights/yolov8n-face.pt`,
-  or pass `--yolov8-url <url>`.
-- **RetinaFace** — Google-Drive hosted by the upstream repo
-  ([biubug6/Pytorch_Retinaface](https://github.com/biubug6/Pytorch_Retinaface)),
-  so the script won't fetch it blind. Either:
-  - `python scripts/fetch_weights.py --only retinaface --retinaface-url <direct url>`, or
-  - `--retinaface-gdrive-id <id>` (needs `pip install gdown`), or
-  - download `mobilenet0.25_Final.pth` manually and save it as
-    `backend/weights/retinaface_mobilenet0.25.pth`.
+Both backends auto-download from public mirrors (~8 MB total):
 
-**`DETECTOR_BACKEND` defaults to `retinaface`.** If you only have YOLOv8-face
-weights, set `DETECTOR_BACKEND=yolov8face` in `.env` — otherwise every job fails
-with "RetinaFace weights not found".
+| Backend | Source | Saved as |
+|---|---|---|
+| YOLOv8-face | `akanametov/yolo-face` GitHub release `1.0.0` | `backend/weights/yolov8n-face.pt` |
+| RetinaFace (MobileNet0.25) | `py-feat/retinaface` on HuggingFace | `backend/weights/retinaface_mobilenet0.25.pth` |
+
+If a mirror is down: `--yolov8-url <url>` / `--retinaface-url <url>` /
+`--retinaface-gdrive-id <id>` (the last needs `pip install gdown`), or just drop
+the file in `backend/weights/` under the name above.
 
 > The vendored RetinaFace decode path (`backend/app/detectors/_retinaface/`) is a
-> faithful port of the upstream model but has not yet been run against the real
-> checkpoint in this repo. If RetinaFace results look wrong on your first job,
-> switch to `DETECTOR_BACKEND=yolov8face` (routed through Ultralytics, lower risk)
-> while it's verified.
+> faithful port of the upstream model but hasn't yet been run against the real
+> checkpoint in this repo. If RetinaFace results look wrong on your first job, set
+> `DETECTOR_BACKEND=yolov8face` in `.env` (routed through Ultralytics, lower risk).
 
 ### 4. Run
 

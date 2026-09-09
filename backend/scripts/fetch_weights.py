@@ -6,10 +6,10 @@ Usage (from backend/):
     uv run python scripts/fetch_weights.py --retinaface-url https://.../mnet.pth
     uv run python scripts/fetch_weights.py --retinaface-gdrive-id <id>   # needs `gdown`
 
-YOLOv8-face weights are pulled from the akanametov/yolo-face releases by default
-(override with --yolov8-url). RetinaFace weights (biubug6) are Google-Drive
-hosted; pass a direct URL or a gdrive id, or place the file manually — the
-script prints the expected path and does not guess a mirror.
+Both backends auto-download from public mirrors by default:
+    YOLOv8-face  -> akanametov/yolo-face GitHub release   (override: --yolov8-url)
+    RetinaFace   -> py-feat/retinaface on HuggingFace     (override: --retinaface-url
+                    or --retinaface-gdrive-id for the upstream Google Drive copy)
 """
 
 from __future__ import annotations
@@ -23,11 +23,15 @@ from pathlib import Path
 WEIGHTS_DIR = Path(__file__).resolve().parent.parent / "weights"
 
 YOLOV8_FACE_DEFAULT_URL = (
-    "https://github.com/akanametov/yolo-face/releases/download/v0.0.0/yolov8n-face.pt"
+    "https://github.com/akanametov/yolo-face/releases/download/1.0.0/yolov8n-face.pt"
 )
 YOLOV8_FACE_FILENAME = "yolov8n-face.pt"
 
 RETINAFACE_FILENAME = "retinaface_mobilenet0.25.pth"
+# biubug6's checkpoint, re-hosted (biubug6-format state dict). Override with --retinaface-url.
+RETINAFACE_DEFAULT_URL = (
+    "https://huggingface.co/py-feat/retinaface/resolve/main/mobilenet0.25_Final.pth"
+)
 RETINAFACE_GDRIVE_HINT = (
     "biubug6/Pytorch_Retinaface README -> 'mobilenet0.25' checkpoint (Google Drive). Save it as:"
 )
@@ -90,15 +94,13 @@ def fetch_retinaface(url: str | None, gdrive_id: str | None) -> bool:
         gdown.download(id=gdrive_id, output=str(dest), quiet=False)
         return dest.exists()
 
-    if url:
-        print("[retinaface] downloading…")
-        try:
-            _download(url, dest)
-            return True
-        except Exception as exc:  # noqa: BLE001
-            print(f"[retinaface] FAILED: {exc}")
+    print("[retinaface] downloading…")
+    try:
+        _download(url or RETINAFACE_DEFAULT_URL, dest)
+        return True
+    except Exception as exc:  # noqa: BLE001
+        print(f"[retinaface] FAILED: {exc}")
 
-    print("[retinaface] no source given.")
     print(f"            {RETINAFACE_GDRIVE_HINT}")
     print(f"            {dest}")
     print("            or re-run with --retinaface-url / --retinaface-gdrive-id")

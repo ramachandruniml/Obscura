@@ -1,18 +1,25 @@
 import { useMemo, useState } from "react";
 import { postRedact, resultUrl } from "./api";
 import { BeforeAfter } from "./components/BeforeAfter";
+import { CoastScene } from "./components/CoastScene";
 import { Controls } from "./components/Controls";
 import { Dropzone } from "./components/Dropzone";
 import { DownloadButton } from "./components/DownloadButton";
-import { HeroScene } from "./components/HeroScene";
 import { JobProgress } from "./components/JobProgress";
 import { Arrow, BrandMark } from "./components/icons";
 import { useJobPolling } from "./hooks/useJobPolling";
 import type { RedactMethod } from "./types";
 
-const REPO = "https://github.com/ramachandruniml/Obscura";
-
 type Phase = "idle" | "submitting" | "tracking";
+
+const STEPS = [
+  { t: "Add a file", d: "Drop in a photo or a short video." },
+  {
+    t: "Choose a style",
+    d: "Blur, pixelate, or a solid box — and set the detection threshold.",
+  },
+  { t: "Download", d: "Every face covered. Your file is deleted once it's done." },
+];
 
 export function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -66,10 +73,7 @@ export function App() {
             <span>OBSCURA</span>
           </a>
           <nav className="nav-links">
-            <a href="#tool">How it works</a>
-            <a href={REPO} target="_blank" rel="noreferrer">
-              GitHub ↗
-            </a>
+            <a href="#how">How it works</a>
           </nav>
           <a className="btn nav-cta" href="#tool">
             Redact a file <Arrow />
@@ -93,7 +97,23 @@ export function App() {
             Redact a file <Arrow />
           </a>
         </div>
-        <HeroScene />
+        <CoastScene variant="hero" />
+      </section>
+
+      <section className="how wrap" id="how">
+        <div className="how-strip">
+          <CoastScene variant="strip" />
+        </div>
+        <h2 className="how-title">How it works</h2>
+        <ol className="steps">
+          {STEPS.map((s, i) => (
+            <li className="step" key={s.t}>
+              <span className="step-num">{i + 1}</span>
+              <h3>{s.t}</h3>
+              <p>{s.d}</p>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <main className="wrap tool" id="tool">
@@ -147,12 +167,7 @@ export function App() {
       </main>
 
       <footer className="foot">
-        <div className="wrap">
-          No recognition · no embeddings · no retention. ·{" "}
-          <a href={REPO} target="_blank" rel="noreferrer">
-            Source
-          </a>
-        </div>
+        <div className="wrap">No recognition · no embeddings · no retention.</div>
       </footer>
     </div>
   );

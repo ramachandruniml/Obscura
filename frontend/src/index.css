@@ -346,12 +346,69 @@ input[type="range"] {
 .hero-scene {
   display: block;
   width: 100%;
-  height: clamp(280px, 44vw, 520px);
+  height: clamp(280px, 44vw, 500px);
   margin-top: 28px;
 }
 
+/* --- how it works --- */
+.how {
+  margin-top: 52px;
+}
+.how-strip {
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 30px;
+}
+.coast-strip {
+  display: block;
+  width: 100%;
+  height: clamp(120px, 17vw, 190px);
+}
+.how-title {
+  text-align: center;
+  font-size: 1.9rem;
+  margin: 0 0 22px;
+}
+.steps {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 900px;
+  display: grid;
+  gap: 20px;
+}
+.step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.step-num {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1.6px solid var(--ink);
+  background: var(--teal);
+  color: var(--teal-ink);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+.step h3 {
+  font-size: 1.15rem;
+  margin: 3px 0 3px;
+}
+.step p {
+  margin: 0;
+  color: var(--ink-45);
+  font-size: 0.95rem;
+}
+
 .tool {
-  margin-top: 56px;
+  margin-top: 40px;
 }
 .tool-card {
   padding: 22px;
@@ -398,6 +455,17 @@ input[type="range"] {
   }
   .ba {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 720px) {
+  .steps {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+  }
+  .step {
+    flex-direction: column;
+    text-align: left;
   }
 }
 

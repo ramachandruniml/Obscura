@@ -1,167 +1,147 @@
-import type { ReactElement } from "react";
-
 /**
- * Calm bay at dusk, drawn in ink on parchment: a soft graded sky with a peach
- * horizon glow, a headland silhouette, still water with a warm reflection, and
- * two moored sailboats. Soft washes + gradients do most of the work so it reads
- * as one blended scene rather than a pile of strokes.
+ * Calm bay at dusk — the hero backdrop and the "how it works" band.
  *
- * variant="hero"  — full, edge-to-edge under the headline
- * variant="strip" — a framed horizon band shown above the steps
+ * Deliberately minimal: soft gradient sky and sea, one warm horizon glow, a
+ * clean headland silhouette, a few precise ripple lines, two sailboats. No
+ * randomness, so it renders identically every time.
+ *
+ * variant="hero"  — absolute, fills the hero section behind the headline
+ * variant="strip" — a framed horizon band above the steps
  */
 
 const INK = "#1b1810";
 
-function mulberry32(seed: number): () => number {
-  return () => {
-    seed = (seed + 0x6d2b79f5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-const rand = mulberry32(9071);
-const jit = (n: number) => (rand() - 0.5) * n;
-
-// wispy high clouds — a few long soft strokes leaning right
-const wisps: ReactElement[] = [];
-for (let i = 0; i < 5; i++) {
-  const y = 58 + i * 24 + jit(8);
-  const x = 110 + i * 46;
-  const len = 340 + rand() * 380;
-  wisps.push(
-    <path
-      key={`w${i}`}
-      d={`M${x} ${y} q ${len * 0.3} ${jit(8) - 5} ${len * 0.6} ${jit(5)} t ${len * 0.4} ${jit(7)}`}
-      stroke="#6b6675"
-      strokeWidth={2.4}
-      strokeLinecap="round"
-      fill="none"
-      opacity={0.26 - i * 0.03}
-    />,
-  );
-}
-
-// broken cloud band just above the horizon, right half
-const band: ReactElement[] = [];
-for (let i = 0; i < 9; i++) {
-  const x = 540 + i * 70 + jit(14);
-  const y = 300 - jit(10);
-  const len = 28 + rand() * 46;
-  band.push(
-    <path
-      key={`b${i}`}
-      d={`M${x} ${y} q ${len / 2} ${-5 - rand() * 6} ${len} 0`}
-      stroke="#5c5866"
-      strokeWidth={5}
-      strokeLinecap="round"
-      fill="none"
-      opacity={0.38}
-    />,
-  );
-}
-
-// still water — a handful of long gentle ripples, fading down
-const ripples: ReactElement[] = [];
-for (let i = 0, y = 340; y < 545; i++, y += 15 + rand() * 8) {
-  const d = 4 + rand() * 6;
-  ripples.push(
-    <path
-      key={`r${i}`}
-      d={`M60 ${y} C 360 ${y - d} 740 ${y + d} 1150 ${y + jit(4)}`}
-      stroke={INK}
-      strokeWidth={0.8}
-      fill="none"
-      opacity={Math.max(0.05, 0.3 - (y - 340) / 950)}
-    />,
-  );
-}
-
-const headland =
-  "M0 250 C 120 252 210 264 296 246 C 338 237 366 206 408 212 " +
-  "C 452 218 470 250 512 258 C 548 265 566 300 604 306 L 604 322 L 0 322 Z";
-
-// tree bumps along the point
-const trees: ReactElement[] = [];
-for (let i = 0; i < 7; i++) {
-  const x = 466 + i * 20 + jit(5);
-  trees.push(<path key={`t${i}`} d={`M${x - 8} 306 q 8 -13 16 0 z`} fill={INK} opacity={0.92} />);
-}
-
 function Boat({ x, y, s }: { x: number; y: number; s: number }) {
   return (
-    <g transform={`translate(${x} ${y}) scale(${s})`}>
-      <path d="M-10 0 Q 0 6 10 0" stroke={INK} strokeWidth={1.6} fill="none" />
-      <line x1="0" y1="0" x2="0" y2="-22" stroke={INK} strokeWidth={1.4} />
-      <path d="M0 -21 L 7 -4 L 0 -4 Z" fill={INK} opacity={0.5} />
+    <g
+      transform={`translate(${x} ${y}) scale(${s})`}
+      fill="none"
+      stroke={INK}
+      strokeWidth={1.6}
+      strokeLinecap="round"
+    >
+      <path d="M-11 0 Q 0 7 11 0" />
+      <line x1="0" y1="0" x2="0" y2="-26" />
+      <path d="M0 -25 L 8 -5 L 0 -5 Z" fill={INK} stroke="none" opacity="0.6" />
+      <path d="M0 -19 L -6 -6 L 0 -6 Z" fill={INK} stroke="none" opacity="0.32" />
     </g>
   );
 }
+
+const HEADLAND =
+  "M0 360 C 140 356 262 344 360 326 C 430 314 470 336 520 366 " +
+  "C 560 390 586 416 628 428 L 628 434 L 0 434 Z";
+
+const RIPPLES = [472, 520, 574, 636].map((y, i) => (
+  <path
+    key={`rp${y}`}
+    d={`M40 ${y} C 400 ${y - 6} 800 ${y + 6} 1160 ${y}`}
+    stroke={INK}
+    strokeWidth={0.9}
+    fill="none"
+    opacity={0.26 - i * 0.05}
+  />
+));
 
 interface Props {
   variant?: "hero" | "strip";
 }
 
 export function CoastScene({ variant = "hero" }: Props) {
-  const viewBox = variant === "hero" ? "0 0 1200 560" : "0 150 1200 250";
+  const hero = variant === "hero";
   return (
     <svg
-      className={variant === "hero" ? "hero-scene" : "coast-strip"}
-      viewBox={viewBox}
-      preserveAspectRatio="xMidYMid slice"
+      className={hero ? "hero-bg" : "coast-strip"}
+      viewBox={hero ? "0 0 1200 760" : "0 250 1200 300"}
+      preserveAspectRatio="xMidYMax slice"
       role="img"
       aria-label="Ink illustration of a calm bay at dusk with a headland and two moored sailboats."
     >
       <defs>
         <linearGradient id="cs-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#cdc6d2" stopOpacity="0.5" />
-          <stop offset="0.55" stopColor="#e7ddd0" stopOpacity="0.26" />
-          <stop offset="0.82" stopColor="#edbf97" stopOpacity="0.7" />
-          <stop offset="0.93" stopColor="#f4d3a6" stopOpacity="0.95" />
-          <stop offset="1" stopColor="#efe6d4" stopOpacity="0.18" />
+          <stop offset="0" stopColor="#f4efe2" />
+          <stop offset="0.34" stopColor="#e9e0d2" />
+          <stop offset="0.62" stopColor="#eccaa6" />
+          <stop offset="0.82" stopColor="#f4cd9f" />
+          <stop offset="0.93" stopColor="#f9deb7" />
+          <stop offset="1" stopColor="#e7d9c8" />
         </linearGradient>
         <linearGradient id="cs-sea" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#8b8aa2" stopOpacity="0.42" />
-          <stop offset="0.4" stopColor="#c2ab8d" stopOpacity="0.28" />
-          <stop offset="0.75" stopColor="#dcc6a1" stopOpacity="0.24" />
-          <stop offset="1" stopColor="#cbc4d0" stopOpacity="0.3" />
+          <stop offset="0" stopColor="#9a94a6" stopOpacity="0.55" />
+          <stop offset="0.3" stopColor="#c7ac8c" stopOpacity="0.4" />
+          <stop offset="0.6" stopColor="#dcc39c" stopOpacity="0.32" />
+          <stop offset="1" stopColor="#cfc8d2" stopOpacity="0.4" />
         </linearGradient>
         <linearGradient id="cs-refl" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#f2cf9c" stopOpacity="0.7" />
-          <stop offset="1" stopColor="#f2cf9c" stopOpacity="0" />
+          <stop offset="0" stopColor="#f4d3a8" stopOpacity="0.65" />
+          <stop offset="1" stopColor="#f4d3a8" stopOpacity="0" />
         </linearGradient>
-        <filter id="cs-soft" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="22" />
+        <linearGradient id="cs-scrim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f4efe2" stopOpacity="0.92" />
+          <stop offset="1" stopColor="#f4efe2" stopOpacity="0" />
+        </linearGradient>
+        <filter id="cs-soft" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="26" />
+        </filter>
+        <filter id="cs-cloud" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="9" />
         </filter>
       </defs>
 
-      <rect x="0" y="0" width="1200" height="322" fill="url(#cs-sky)" />
+      {/* sky + horizon glow */}
+      <rect x="0" y="0" width="1200" height="430" fill="url(#cs-sky)" />
       <ellipse
-        cx="650"
-        cy="322"
-        rx="720"
-        ry="58"
-        fill="#edbf97"
-        opacity="0.55"
+        cx="620"
+        cy="430"
+        rx="760"
+        ry="72"
+        fill="#f1caa1"
+        opacity="0.5"
         filter="url(#cs-soft)"
       />
-      <rect x="0" y="322" width="1200" height="240" fill="url(#cs-sea)" />
-      <rect x="700" y="322" width="260" height="210" fill="url(#cs-refl)" opacity="0.5" />
 
-      {wisps}
-      {band}
+      {/* clouds */}
+      <g filter="url(#cs-cloud)" fill="#8b8797">
+        <ellipse cx="770" cy="374" rx="132" ry="15" opacity="0.34" />
+        <ellipse cx="930" cy="360" rx="92" ry="12" opacity="0.3" />
+        <ellipse cx="1050" cy="382" rx="70" ry="13" opacity="0.28" />
+      </g>
+      <path
+        d="M120 118 C 360 104 620 118 900 100"
+        stroke="#8f8b99"
+        strokeWidth="3"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.16"
+      />
+      <path
+        d="M240 176 C 430 168 600 178 780 166"
+        stroke="#8f8b99"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.12"
+      />
 
-      <line x1="0" y1="316" x2="1200" y2="316" stroke={INK} strokeWidth="1.1" opacity="0.55" />
+      {/* sea */}
+      <rect x="0" y="430" width="1200" height="330" fill="url(#cs-sea)" />
+      <rect x="770" y="430" width="230" height="210" fill="url(#cs-refl)" opacity="0.55" />
+      <line x1="0" y1="430" x2="1200" y2="430" stroke={INK} strokeWidth="1.1" opacity="0.5" />
+      {RIPPLES}
 
-      {ripples}
+      {/* headland */}
+      <path d={HEADLAND} fill={INK} opacity="0.92" />
+      <ellipse cx="596" cy="424" rx="18" ry="9" fill={INK} opacity="0.92" />
+      <ellipse cx="628" cy="428" rx="12" ry="7" fill={INK} opacity="0.92" />
 
-      <path d={headland} fill={INK} opacity="0.92" />
-      {trees}
+      {/* boats */}
+      <Boat x={1012} y={428} s={1} />
+      <Boat x={872} y={429} s={0.82} />
+      <line x1="1012" y1="430" x2="1012" y2="448" stroke={INK} strokeWidth="1" opacity="0.22" />
+      <line x1="872" y1="430" x2="872" y2="445" stroke={INK} strokeWidth="1" opacity="0.2" />
 
-      <Boat x={1010} y={314} s={1} />
-      <Boat x={868} y={315} s={0.82} />
-      <line x1="1010" y1="316" x2="1010" y2="333" stroke={INK} strokeWidth="1" opacity="0.22" />
-      <line x1="868" y1="316" x2="868" y2="330" stroke={INK} strokeWidth="1" opacity="0.2" />
+      {/* top scrim so the headline always sits on a clean field */}
+      {hero && <rect x="0" y="0" width="1200" height="300" fill="url(#cs-scrim)" />}
     </svg>
   );
 }

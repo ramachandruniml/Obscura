@@ -330,10 +330,24 @@ input[type="range"] {
   position: relative;
   overflow: hidden;
   text-align: center;
-  padding-top: 74px;
+  min-height: clamp(560px, 74vh, 780px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
 }
 .hero-copy {
+  position: relative;
+  z-index: 1;
   max-width: 800px;
+  padding-top: clamp(52px, 11vh, 128px);
 }
 .hero .eyebrow {
   margin-bottom: 14px;
@@ -342,12 +356,6 @@ input[type="range"] {
   max-width: 540px;
   margin: 18px auto 26px;
   font-size: 1.05rem;
-}
-.hero-scene {
-  display: block;
-  width: 100%;
-  height: clamp(280px, 44vw, 500px);
-  margin-top: 28px;
 }
 
 /* --- how it works --- */
@@ -474,6 +482,9 @@ input[type="range"] {
     display: none;
   }
   .hero {
-    padding-top: 40px;
+    min-height: 520px;
+  }
+  .hero-copy {
+    padding-top: 44px;
   }
 }

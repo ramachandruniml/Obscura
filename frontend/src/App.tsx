@@ -82,6 +82,7 @@ export function App() {
       </header>
 
       <section className="hero" id="top">
+        <CoastScene variant="hero" />
         <div className="wrap hero-copy">
           <p className="eyebrow">Share the view — not the faces.</p>
           <h1 className="display">
@@ -97,7 +98,6 @@ export function App() {
             Redact a file <Arrow />
           </a>
         </div>
-        <CoastScene variant="hero" />
       </section>
 
       <section className="how wrap" id="how">

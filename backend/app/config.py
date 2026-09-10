@@ -9,10 +9,15 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+# pydantic-settings v2 JSON-decodes env values for list/tuple fields *before* any
+# field_validator runs, so a plain "a,b,c" env value would raise. NoDecode hands
+# the raw string to our `mode="before"` validators instead.
+_Csv = Annotated[list[str], NoDecode]
 
 
 class Settings(BaseSettings):
@@ -31,7 +36,7 @@ class Settings(BaseSettings):
     # --- API --------------------------------------------------------------
     api_host: str = "0.0.0.0"
     api_port: int = 8000
-    cors_origins: list[str] = Field(
+    cors_origins: _Csv = Field(
         default_factory=lambda: ["http://localhost:5173", "http://localhost:3000"]
     )
 
@@ -54,10 +59,10 @@ class Settings(BaseSettings):
 
     # --- Upload limits ----------------------------------------------------
     max_upload_bytes: int = 100 * 1024 * 1024
-    allowed_image_types: list[str] = Field(
+    allowed_image_types: _Csv = Field(
         default_factory=lambda: ["image/jpeg", "image/png", "image/webp"]
     )
-    allowed_video_types: list[str] = Field(
+    allowed_video_types: _Csv = Field(
         default_factory=lambda: ["video/mp4", "video/quicktime", "video/webm"]
     )
     max_video_duration_seconds: float = 300.0
@@ -88,7 +93,7 @@ class Settings(BaseSettings):
     blur_min_kernel: int = 15
     blur_passes: int = 2
     pixelate_blocks: int = 12
-    solid_box_color: tuple[int, int, int] = (0, 0, 0)  # BGR
+    solid_box_color: Annotated[tuple[int, int, int], NoDecode] = (0, 0, 0)  # BGR
 
     # --- Video tracking -----------------------------------------------------
     detect_every_n_frames: int = 5

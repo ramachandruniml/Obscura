@@ -382,9 +382,10 @@ input[type="range"] {
   list-style: none;
   margin: 0 auto;
   padding: 0;
-  max-width: 900px;
+  max-width: 980px;
   display: grid;
   gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 .step {
   display: flex;
@@ -467,8 +468,7 @@ input[type="range"] {
 
 @media (min-width: 720px) {
   .steps {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 28px;
+    gap: 26px;
   }
   .step {
     flex-direction: column;

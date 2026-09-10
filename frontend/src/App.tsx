@@ -14,11 +14,12 @@ type Phase = "idle" | "submitting" | "tracking";
 
 const STEPS = [
   { t: "Add a file", d: "Drop in a photo or a short video." },
+  { t: "Choose a style", d: "Blur, pixelate, or a solid black box." },
   {
-    t: "Choose a style",
-    d: "Blur, pixelate, or a solid box — and set the detection threshold.",
+    t: "Set the confidence threshold",
+    d: "The detector scores each face 0–1. This slider is the cutoff to count one. Lower it to catch small, blurry, or side-on faces; raise it to avoid covering things that aren't faces.",
   },
-  { t: "Download", d: "Every face covered. Your file is deleted once it's done." },
+  { t: "Download", d: "Every detected face is covered. Your file is deleted right after." },
 ];
 
 export function App() {

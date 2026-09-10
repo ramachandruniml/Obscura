@@ -15,6 +15,16 @@ Built in 10 stages — see [Project layout](#project-layout) for the map. All
 backend + frontend tests and both Docker image builds pass in
 [CI](.github/workflows/ci.yml).
 
+<p align="center">
+  <img src="docs/screenshots/hero.png" alt="Obscura — main page" width="880">
+</p>
+<p align="center">
+  <img src="docs/screenshots/how-it-works.png" alt="How it works — the four steps" width="880">
+</p>
+<p align="center">
+  <img src="docs/screenshots/redact.png" alt="The redact-a-file panel" width="880">
+</p>
+
 ---
 
 ## What you need to do to run it
@@ -60,10 +70,11 @@ If a mirror is down: `--yolov8-url <url>` / `--retinaface-url <url>` /
 `--retinaface-gdrive-id <id>` (the last needs `pip install gdown`), or just drop
 the file in `backend/weights/` under the name above.
 
-> The vendored RetinaFace decode path (`backend/app/detectors/_retinaface/`) is a
-> faithful port of the upstream model but hasn't yet been run against the real
-> checkpoint in this repo. If RetinaFace results look wrong on your first job, set
-> `DETECTOR_BACKEND=yolov8face` in `.env` (routed through Ultralytics, lower risk).
+> `backend/app/detectors/_retinaface/` is a trimmed vendoring of biubug6's
+> `Pytorch_Retinaface`; it loads and runs against the real MobileNet0.25
+> checkpoint (verified end to end — a photo → `n_faces` > 0 → blurred output).
+> `DETECTOR_BACKEND=yolov8face` (via Ultralytics) is the alternative if you
+> prefer it.
 
 ### 4. Run
 
@@ -240,11 +251,12 @@ obscura/
 │   │   └── benchmarking.py       # WIDER FACE eval + latency helpers
 │   ├── scripts/                  # fetch_weights, benchmark_widerface, export_onnx
 │   ├── weights/                  # models live here (git-ignored)
-│   └── tests/                    # ~175 tests, no weights needed
+│   └── tests/                    # ~180 tests, no weights needed
 ├── frontend/                     # React + TS + Tailwind + Vite + Vitest
-│   └── src/{api,types}.ts, hooks/, components/, *.test.tsx
+│   └── src/                      # api.ts, hooks/useJobPolling, components/ (CoastScene…), *.test.tsx
 ├── docs/
 │   ├── architecture.md
+│   ├── screenshots/              # README images
 │   └── benchmarks/               # generated reports (git-ignored)
 └── .github/workflows/ci.yml      # backend + frontend + docker jobs
 ```
@@ -260,6 +272,32 @@ obscura/
   everything under `/data/<job_id>/` is deleted once `manifest.expires_at` passes
   (`RESULT_TTL_SECONDS`, default 1 h) by the `beat` sweep.
 - The worker makes no outbound network calls during processing.
+
+---
+
+## Security posture
+
+This is a local, single-user demo. What's in place:
+
+- **No secrets in the repo** — `.env`, model weights, `/data`, and scratch files
+  are git-ignored; CI verifies nothing sensitive is committed.
+- **Input is validated before it reaches the worker** — MIME allow-list, a
+  streamed size cap (`MAX_UPLOAD_BYTES`), a PIL decompression-bomb guard
+  (`MAX_IMAGE_PIXELS`), and a video-duration cap. Bad input → a 4xx, never a
+  crash.
+- **CORS** is restricted to the configured `CORS_ORIGINS` (never `*`), with no
+  credentials and only `GET`/`POST`.
+- **nginx** sends `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy`, and a locked-down `Permissions-Policy`; `server_tokens` is
+  off.
+- **Subprocess calls** (ffmpeg) pass an argument list, never a shell string.
+- **Dependencies are version-pinned** (`pyproject.toml`, `package-lock.json`);
+  CI lints and tests every push.
+- **No data retention** — see the section above.
+
+Known limitations for a real deployment: no authentication or rate limiting on
+the API, and the containers run as root internally. Add an auth layer, a rate
+limiter, and non-root users before exposing this beyond localhost.
 
 ---
 
@@ -308,7 +346,8 @@ _Hardware: TBD · Command: `python scripts/export_onnx.py`_
 |---|---|
 | Every job → `failed`, error mentions "weights not found" | No detector weights in `backend/weights/`. Run `scripts/fetch_weights.py`, or switch `DETECTOR_BACKEND` to the one you have. |
 | `docker compose up` → port already in use | Something's on 3000 / 8000 / 6379. Stop it or remap the `ports:` in `docker-compose.yml`. |
-| RetinaFace boxes look off / miss obvious faces | The vendored decode is unverified against real weights — use `DETECTOR_BACKEND=yolov8face` and open an issue. |
+| Result looks unchanged | Redaction is applied **per detected face**. A small face → a small (but complete) redacted patch that's easy to miss at full size. Check the job's `n_faces` — if `0`, lower the confidence slider. To cover more area / blur harder, raise `BOX_PADDING_RATIO`, `BLUR_PASSES`, `BLUR_KERNEL_FRACTION` in `.env` then `docker compose up -d worker`. |
+| Faces missed | Lower the confidence threshold (small / blurry / side-on faces score low), or try `DETECTOR_BACKEND=yolov8face`. |
 | `DEVICE=cuda` but it runs on CPU | The image ships CPU torch. Rebuild with `--build-arg BUILD_TORCH_VARIANT=cu121` and use `docker-compose.gpu.yml`. |
 | Video output has no audio | The `ffmpeg` audio remux failed (logged as `video.audio_mux_failed`); the video-only result is still produced. |
 | Benchmark script exits with code 2 | WIDER FACE not found at `--data-root`. It's not auto-downloaded — see step 5. |

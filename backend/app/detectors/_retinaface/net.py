@@ -81,17 +81,19 @@ class SSH(nn.Module):
         super().__init__()
         assert out_channel % 4 == 0
         leaky = 0.1 if out_channel <= 64 else 0.0
-        self.conv3x3 = conv_bn_no_relu(in_channel, out_channel // 2, stride=1)
-        self.conv5x5_1 = conv_bn(in_channel, out_channel // 4, stride=1, leaky=leaky)
-        self.conv5x5_2 = conv_bn_no_relu(out_channel // 4, out_channel // 4, stride=1)
-        self.conv7x7_2 = conv_bn(out_channel // 4, out_channel // 4, stride=1, leaky=leaky)
+        # Submodule names must match the biubug6 checkpoint exactly (capital X,
+        # and conv7x7_3 really is lowercase upstream).
+        self.conv3X3 = conv_bn_no_relu(in_channel, out_channel // 2, stride=1)
+        self.conv5X5_1 = conv_bn(in_channel, out_channel // 4, stride=1, leaky=leaky)
+        self.conv5X5_2 = conv_bn_no_relu(out_channel // 4, out_channel // 4, stride=1)
+        self.conv7X7_2 = conv_bn(out_channel // 4, out_channel // 4, stride=1, leaky=leaky)
         self.conv7x7_3 = conv_bn_no_relu(out_channel // 4, out_channel // 4, stride=1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        conv3x3 = self.conv3x3(x)
-        conv5x5_1 = self.conv5x5_1(x)
-        conv5x5 = self.conv5x5_2(conv5x5_1)
-        conv7x7_2 = self.conv7x7_2(conv5x5_1)
+        conv3x3 = self.conv3X3(x)
+        conv5x5_1 = self.conv5X5_1(x)
+        conv5x5 = self.conv5X5_2(conv5x5_1)
+        conv7x7_2 = self.conv7X7_2(conv5x5_1)
         conv7x7 = self.conv7x7_3(conv7x7_2)
         out = torch.cat([conv3x3, conv5x5, conv7x7], dim=1)
         return F.relu(out)

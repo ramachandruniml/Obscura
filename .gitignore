@@ -37,6 +37,12 @@ datasets/
 WIDER_*/
 wider_face_split/
 
+# Local test fixtures (supply your own face image) + scratch files
+backend/tests/fixtures/*
+!backend/tests/fixtures/.gitkeep
+/scratch_*
+/scratch_out/
+
 # Env
 .env
 .env.*

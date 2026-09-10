@@ -247,6 +247,22 @@ class TestInferenceIntegration:
 
 
 class TestRetinaFaceSpecifics:
+    def test_module_names_match_biubug6_checkpoint_layout(self) -> None:
+        """The vendored model's param names must equal the upstream checkpoint's,
+        or load_state_dict silently loads a half-initialised model. (Regression:
+        the SSH layers were renamed conv3X3 -> conv3x3, breaking every checkpoint.)
+        """
+        from app.detectors._retinaface import cfg_mnet
+        from app.detectors._retinaface.model import RetinaFace
+
+        keys = set(RetinaFace(cfg_mnet).state_dict())
+        for ssh in ("ssh1", "ssh2", "ssh3"):
+            for sub in ("conv3X3", "conv5X5_1", "conv5X5_2", "conv7X7_2", "conv7x7_3"):
+                assert f"{ssh}.{sub}.0.weight" in keys, f"missing {ssh}.{sub}"
+        assert "fpn.output1.0.weight" in keys
+        assert "ClassHead.0.conv1x1.weight" in keys
+        assert not any(".fc." in k or k.endswith(".fc.weight") for k in keys)  # classifier dropped
+
     def test_landmarks_shape(self, retinaface_detector: Detector, face_image: np.ndarray) -> None:
         dets = retinaface_detector.detect(face_image, 0.5)
         assert retinaface_detector.provides_landmarks

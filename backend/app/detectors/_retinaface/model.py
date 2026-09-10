@@ -95,10 +95,13 @@ def load_retinaface(cfg: dict[str, Any], weights_path: str, device: torch.device
         state = state["state_dict"]
     state = remove_prefix(state, "module.")
     missing, unexpected = model.load_state_dict(state, strict=False)
+    # The MobileNetV1 classifier (avg/fc) is dropped by IntermediateLayerGetter,
+    # so checkpoint keys for it are benign "unexpected" entries.
+    unexpected = [k for k in unexpected if not k.startswith(("body.fc", "fc", "body.avg", "avg"))]
     if missing or unexpected:
-        # The fc layer of MobileNetV1 is unused at inference and may be absent.
-        real_missing = [k for k in missing if not k.startswith(("body.fc", "fc"))]
-        if real_missing:
-            raise RuntimeError(f"RetinaFace checkpoint mismatch, missing keys: {real_missing[:8]}")
+        raise RuntimeError(
+            f"RetinaFace checkpoint mismatch for {weights_path}: "
+            f"missing={missing[:6]} unexpected={unexpected[:6]}"
+        )
     model.eval().to(device)
     return model

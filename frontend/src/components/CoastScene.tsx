@@ -32,16 +32,34 @@ const HEADLAND =
   "M0 360 C 140 356 262 344 360 326 C 430 314 470 336 520 366 " +
   "C 560 390 586 416 628 428 L 628 434 L 0 434 Z";
 
-const RIPPLES = [472, 520, 574, 636].map((y, i) => (
-  <path
-    key={`rp${y}`}
-    d={`M40 ${y} C 400 ${y - 6} 800 ${y + 6} 1160 ${y}`}
-    stroke={INK}
-    strokeWidth={0.9}
-    fill="none"
-    opacity={0.26 - i * 0.05}
-  />
-));
+/** A smooth continuous wave along the whole width: one crest, then reflected
+ *  half-waves ('t') all the way across. */
+function wavePath(baseY: number, wavelength: number, amp: number): string {
+  const half = wavelength / 2;
+  let d = `M-60 ${baseY} q ${half / 2} ${-amp} ${half} 0`;
+  const count = Math.ceil(1320 / half);
+  for (let i = 0; i < count; i++) d += ` t ${half} 0`;
+  return d;
+}
+
+const WAVE_ROWS = 9;
+const WAVES = Array.from({ length: WAVE_ROWS }, (_, i) => {
+  const t = i / (WAVE_ROWS - 1); // 0 near the horizon, 1 in the foreground
+  const baseY = 450 + t * 280;
+  const wavelength = 64 + t * 104;
+  const amp = 1.4 + t * 6.2;
+  return (
+    <path
+      key={`wv${i}`}
+      d={wavePath(baseY, wavelength, amp)}
+      stroke={INK}
+      strokeWidth={0.8 + t * 0.5}
+      fill="none"
+      strokeLinecap="round"
+      opacity={0.09 + t * 0.16}
+    />
+  );
+});
 
 interface Props {
   variant?: "hero" | "strip";
@@ -127,7 +145,7 @@ export function CoastScene({ variant = "hero" }: Props) {
       <rect x="0" y="430" width="1200" height="330" fill="url(#cs-sea)" />
       <rect x="770" y="430" width="230" height="210" fill="url(#cs-refl)" opacity="0.55" />
       <line x1="0" y1="430" x2="1200" y2="430" stroke={INK} strokeWidth="1.1" opacity="0.5" />
-      {RIPPLES}
+      {WAVES}
 
       {/* headland */}
       <path d={HEADLAND} fill={INK} opacity="0.92" />

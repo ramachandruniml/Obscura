@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 
 function Media({ src, kind }: { src: string; kind: "image" | "video" }) {
+  const style = { display: "block", width: "100%" } as const;
   if (kind === "video") {
-    return <video src={src} controls className="w-full rounded-md bg-black" />;
+    return <video src={src} controls style={style} />;
   }
-  return <img src={src} alt="" className="w-full rounded-md bg-black object-contain" />;
+  return <img src={src} alt="" style={style} />;
 }
 
 interface Props {
@@ -23,14 +24,16 @@ export function BeforeAfter({ file, resultSrc, kind }: Props) {
   }, [file]);
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="ba">
       <figure>
-        <figcaption className="mb-1 text-sm text-slate-400">Before</figcaption>
-        {beforeSrc && <Media src={beforeSrc} kind={kind} />}
+        <figcaption className="figcap">Before</figcaption>
+        <div className="figure-frame">{beforeSrc && <Media src={beforeSrc} kind={kind} />}</div>
       </figure>
       <figure>
-        <figcaption className="mb-1 text-sm text-slate-400">After</figcaption>
-        <Media src={resultSrc} kind={kind} />
+        <figcaption className="figcap">After</figcaption>
+        <div className="figure-frame">
+          <Media src={resultSrc} kind={kind} />
+        </div>
       </figure>
     </div>
   );

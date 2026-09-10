@@ -4,9 +4,13 @@ import { BeforeAfter } from "./components/BeforeAfter";
 import { Controls } from "./components/Controls";
 import { Dropzone } from "./components/Dropzone";
 import { DownloadButton } from "./components/DownloadButton";
+import { HeroScene } from "./components/HeroScene";
 import { JobProgress } from "./components/JobProgress";
+import { Arrow, BrandMark } from "./components/icons";
 import { useJobPolling } from "./hooks/useJobPolling";
 import type { RedactMethod } from "./types";
+
+const REPO = "https://github.com/ramachandruniml/Obscura";
 
 type Phase = "idle" | "submitting" | "tracking";
 
@@ -23,14 +27,14 @@ export function App() {
   const error =
     submitError ?? pollError ?? (job?.status === "failed" ? (job.error ?? "Job failed.") : null);
   const busy =
-    phase === "submitting" ||
-    (!!job && (job.status === "pending" || job.status === "processing"));
+    phase === "submitting" || (!!job && (job.status === "pending" || job.status === "processing"));
   const done = job?.status === "complete";
 
   const kind: "image" | "video" = useMemo(
     () => (file?.type.startsWith("video/") ? "video" : "image"),
     [file],
   );
+  const faces = job?.stats?.n_faces;
 
   const submit = async () => {
     if (!file) return;
@@ -53,20 +57,47 @@ export function App() {
     setSubmitError(null);
   };
 
-  const faces = job?.stats?.n_faces;
-
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <header className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight">Obscura</h1>
-          <p className="text-slate-400">
-            Blur, pixelate, or box out every face before you share footage. No recognition,
-            no retention.
-          </p>
-        </header>
+    <div className="page">
+      <header className="nav">
+        <div className="wrap nav-inner">
+          <a className="brand" href="#top">
+            <BrandMark />
+            <span>OBSCURA</span>
+          </a>
+          <nav className="nav-links">
+            <a href="#tool">How it works</a>
+            <a href={REPO} target="_blank" rel="noreferrer">
+              GitHub ↗
+            </a>
+          </nav>
+          <a className="btn nav-cta" href="#tool">
+            Redact a file <Arrow />
+          </a>
+        </div>
+      </header>
 
-        <section className="space-y-5 rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+      <section className="hero" id="top">
+        <div className="wrap hero-copy">
+          <p className="eyebrow">Share the view — not the faces.</p>
+          <h1 className="display">
+            Blur every face.
+            <br />
+            Share with a clear conscience.
+          </h1>
+          <p className="subtle hero-sub">
+            Automatic face redaction for photos and video. No recognition, no embeddings —
+            your files are deleted once processing finishes.
+          </p>
+          <a className="btn hero-cta" href="#tool">
+            Redact a file <Arrow />
+          </a>
+        </div>
+        <HeroScene />
+      </section>
+
+      <main className="wrap tool" id="tool">
+        <div className="card tool-card">
           <Dropzone file={file} onFile={setFile} disabled={busy} />
           <Controls
             method={method}
@@ -76,47 +107,53 @@ export function App() {
             disabled={busy}
           />
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="tool-actions">
             <button
               type="button"
+              className="btn"
               onClick={() => void submit()}
               disabled={!file || busy}
-              className="rounded-md bg-sky-600 px-4 py-2 font-medium text-white hover:bg-sky-500 disabled:opacity-40"
             >
               {busy ? "Working…" : "Redact faces"}
+              {!busy && <Arrow />}
             </button>
             {job && <JobProgress status={job.status} />}
             {(done || error) && (
-              <button
-                type="button"
-                onClick={reset}
-                className="text-sm text-slate-400 underline hover:text-slate-200"
-              >
+              <button type="button" className="link-ink" onClick={reset}>
                 Start over
               </button>
             )}
           </div>
 
           {error && (
-            <p role="alert" className="rounded-md bg-rose-950/60 px-3 py-2 text-sm text-rose-300">
+            <p role="alert" className="alert">
               {error}
             </p>
           )}
-        </section>
+        </div>
 
         {file && done && jobId && (
-          <section className="mt-8 space-y-4">
+          <div className="results">
             <BeforeAfter file={file} resultSrc={resultUrl(jobId)} kind={kind} />
             {typeof faces !== "undefined" && (
-              <p className="text-sm text-slate-400">{faces} face(s) redacted.</p>
+              <p className="subtle results-count">{faces} face(s) redacted.</p>
             )}
             <DownloadButton
               href={resultUrl(jobId)}
               filename={`${file.name.replace(/\.[^.]+$/, "")}_redacted`}
             />
-          </section>
+          </div>
         )}
-      </div>
-    </main>
+      </main>
+
+      <footer className="foot">
+        <div className="wrap">
+          No recognition · no embeddings · no retention. ·{" "}
+          <a href={REPO} target="_blank" rel="noreferrer">
+            Source
+          </a>
+        </div>
+      </footer>
+    </div>
   );
 }

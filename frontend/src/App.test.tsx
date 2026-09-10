@@ -23,9 +23,10 @@ function chooseFileAndSubmit() {
 }
 
 describe("App", () => {
-  it("renders the title", () => {
+  it("renders the brand and hero headline", () => {
     render(<App />);
-    expect(screen.getByRole("heading", { name: /obscura/i })).toBeInTheDocument();
+    expect(screen.getByRole("banner")).toHaveTextContent(/obscura/i);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(/blur every face/i);
   });
 
   it("runs a job to completion and shows the download link + face count", async () => {

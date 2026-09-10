@@ -41,6 +41,8 @@ export function Dropzone({ file, onFile, disabled }: Props) {
     <div>
       <button
         type="button"
+        className="dropzone"
+        data-drag={dragging}
         disabled={disabled}
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => {
@@ -53,18 +55,13 @@ export function Dropzone({ file, onFile, disabled }: Props) {
           setDragging(false);
           consider(e.dataTransfer.files[0]);
         }}
-        className={`w-full rounded-lg border-2 border-dashed p-8 text-center transition ${
-          dragging ? "border-sky-400 bg-sky-950/40" : "border-slate-700 hover:border-slate-500"
-        } disabled:opacity-50`}
       >
         {file ? (
-          <span className="text-slate-200">
-            {file.name} · {(file.size / 1e6).toFixed(1)} MB
+          <span>
+            <strong>{file.name}</strong> · {(file.size / 1e6).toFixed(1)} MB
           </span>
         ) : (
-          <span className="text-slate-400">
-            Drop an image or video here, or click to choose
-          </span>
+          <span>Drop an image or video here, or choose a file</span>
         )}
       </button>
 
@@ -72,13 +69,13 @@ export function Dropzone({ file, onFile, disabled }: Props) {
         ref={inputRef}
         type="file"
         aria-label="file"
+        className="sr-only"
         accept={ACCEPT.join(",")}
-        className="hidden"
         onChange={(e) => consider(e.target.files?.[0])}
       />
 
       {message && (
-        <p className="mt-2 text-sm text-rose-400" role="alert">
+        <p className="alert" role="alert" style={{ marginTop: 8 }}>
           {message}
         </p>
       )}

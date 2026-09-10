@@ -346,33 +346,32 @@ input[type="range"] {
 .hero-copy {
   position: relative;
   z-index: 1;
-  max-width: 800px;
-  padding-top: clamp(52px, 11vh, 128px);
+  max-width: 760px;
+  padding: clamp(56px, 11vh, 120px) 26px 44px;
+  border-radius: 28px;
+  /* soft parchment field so every line stays readable over the scene,
+     fading to nothing so there's no visible panel edge */
+  background: radial-gradient(
+    135% 112% at 50% 32%,
+    rgba(244, 239, 226, 0.95) 0%,
+    rgba(244, 239, 226, 0.84) 50%,
+    rgba(244, 239, 226, 0) 100%
+  );
 }
 .hero .eyebrow {
   margin-bottom: 14px;
+  color: var(--ink-70);
 }
 .hero-sub {
   max-width: 540px;
   margin: 18px auto 26px;
   font-size: 1.05rem;
+  color: var(--ink-70);
 }
 
 /* --- how it works --- */
 .how {
   margin-top: 52px;
-}
-.how-strip {
-  border: 1.5px solid var(--ink);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  margin-bottom: 30px;
-}
-.coast-strip {
-  display: block;
-  width: 100%;
-  height: clamp(120px, 17vw, 190px);
 }
 .how-title {
   text-align: center;

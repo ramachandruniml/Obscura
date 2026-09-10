@@ -82,7 +82,7 @@ export function App() {
       </header>
 
       <section className="hero" id="top">
-        <CoastScene variant="hero" />
+        <CoastScene />
         <div className="wrap hero-copy">
           <p className="eyebrow">Share the view — not the faces.</p>
           <h1 className="display">
@@ -101,9 +101,6 @@ export function App() {
       </section>
 
       <section className="how wrap" id="how">
-        <div className="how-strip">
-          <CoastScene variant="strip" />
-        </div>
         <h2 className="how-title">How it works</h2>
         <ol className="steps">
           {STEPS.map((s, i) => (

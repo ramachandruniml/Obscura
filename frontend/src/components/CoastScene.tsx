@@ -1,12 +1,9 @@
 /**
- * Calm bay at dusk — the hero backdrop and the "how it works" band.
+ * Calm bay at dusk — the hero background.
  *
- * Deliberately minimal: soft gradient sky and sea, one warm horizon glow, a
- * clean headland silhouette, a few precise ripple lines, two sailboats. No
- * randomness, so it renders identically every time.
- *
- * variant="hero"  — absolute, fills the hero section behind the headline
- * variant="strip" — a framed horizon band above the steps
+ * Soft gradient sky and sea, one warm horizon glow, a clean headland
+ * silhouette, layered sine-wave water, two sailboats. No randomness, so it
+ * renders identically every time.
  */
 
 const INK = "#1b1810";
@@ -29,48 +26,45 @@ function Boat({ x, y, s }: { x: number; y: number; s: number }) {
 }
 
 const HEADLAND =
-  "M0 360 C 140 356 262 344 360 326 C 430 314 470 336 520 366 " +
-  "C 560 390 586 416 628 428 L 628 434 L 0 434 Z";
+  "M0 400 C 140 396 262 384 360 366 C 430 354 470 376 520 406 " +
+  "C 560 430 586 456 628 468 L 628 474 L 0 474 Z";
 
-/** A smooth continuous wave along the whole width: one crest, then reflected
- *  half-waves ('t') all the way across. */
-function wavePath(baseY: number, wavelength: number, amp: number): string {
-  const half = wavelength / 2;
-  let d = `M-60 ${baseY} q ${half / 2} ${-amp} ${half} 0`;
-  const count = Math.ceil(1320 / half);
-  for (let i = 0; i < count; i++) d += ` t ${half} 0`;
-  return d;
+/** A true sine, sampled finely into a rounded polyline — reads as water. */
+function sineWave(baseY: number, wavelength: number, amp: number, phase: number): string {
+  const pts: string[] = [];
+  for (let x = -40; x <= 1240; x += 9) {
+    const y = baseY + amp * Math.sin(((x + phase) / wavelength) * Math.PI * 2);
+    pts.push(`${x} ${y.toFixed(2)}`);
+  }
+  return `M${pts.join(" L ")}`;
 }
 
-const WAVE_ROWS = 9;
+const WAVE_ROWS = 6;
 const WAVES = Array.from({ length: WAVE_ROWS }, (_, i) => {
   const t = i / (WAVE_ROWS - 1); // 0 near the horizon, 1 in the foreground
-  const baseY = 450 + t * 280;
-  const wavelength = 64 + t * 104;
-  const amp = 1.4 + t * 6.2;
+  const baseY = 494 + t * 250;
+  const wavelength = 150 + t * 150;
+  const amp = 2 + t * 6;
+  const phase = i * 137; // offset each row so crests don't line up
   return (
     <path
       key={`wv${i}`}
-      d={wavePath(baseY, wavelength, amp)}
+      d={sineWave(baseY, wavelength, amp, phase)}
       stroke={INK}
-      strokeWidth={0.8 + t * 0.5}
+      strokeWidth={0.9 + t * 0.5}
       fill="none"
       strokeLinecap="round"
-      opacity={0.09 + t * 0.16}
+      strokeLinejoin="round"
+      opacity={0.14 + t * 0.08}
     />
   );
 });
 
-interface Props {
-  variant?: "hero" | "strip";
-}
-
-export function CoastScene({ variant = "hero" }: Props) {
-  const hero = variant === "hero";
+export function CoastScene() {
   return (
     <svg
-      className={hero ? "hero-bg" : "coast-strip"}
-      viewBox={hero ? "0 0 1200 760" : "0 250 1200 300"}
+      className="hero-bg"
+      viewBox="0 0 1200 800"
       preserveAspectRatio="xMidYMax slice"
       role="img"
       aria-label="Ink illustration of a calm bay at dusk with a headland and two moored sailboats."
@@ -78,25 +72,21 @@ export function CoastScene({ variant = "hero" }: Props) {
       <defs>
         <linearGradient id="cs-sky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#f4efe2" />
-          <stop offset="0.34" stopColor="#e9e0d2" />
-          <stop offset="0.62" stopColor="#eccaa6" />
-          <stop offset="0.82" stopColor="#f4cd9f" />
-          <stop offset="0.93" stopColor="#f9deb7" />
+          <stop offset="0.4" stopColor="#e9e0d2" />
+          <stop offset="0.66" stopColor="#eccaa6" />
+          <stop offset="0.84" stopColor="#f4cd9f" />
+          <stop offset="0.94" stopColor="#f9deb7" />
           <stop offset="1" stopColor="#e7d9c8" />
         </linearGradient>
         <linearGradient id="cs-sea" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#9a94a6" stopOpacity="0.55" />
-          <stop offset="0.3" stopColor="#c7ac8c" stopOpacity="0.4" />
-          <stop offset="0.6" stopColor="#dcc39c" stopOpacity="0.32" />
-          <stop offset="1" stopColor="#cfc8d2" stopOpacity="0.4" />
+          <stop offset="0" stopColor="#9a94a6" stopOpacity="0.5" />
+          <stop offset="0.3" stopColor="#c7ac8c" stopOpacity="0.36" />
+          <stop offset="0.6" stopColor="#dcc39c" stopOpacity="0.3" />
+          <stop offset="1" stopColor="#cfc8d2" stopOpacity="0.38" />
         </linearGradient>
         <linearGradient id="cs-refl" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#f4d3a8" stopOpacity="0.65" />
+          <stop offset="0" stopColor="#f4d3a8" stopOpacity="0.6" />
           <stop offset="1" stopColor="#f4d3a8" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="cs-scrim" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#f4efe2" stopOpacity="0.92" />
-          <stop offset="1" stopColor="#f4efe2" stopOpacity="0" />
         </linearGradient>
         <filter id="cs-soft" x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="26" />
@@ -107,59 +97,48 @@ export function CoastScene({ variant = "hero" }: Props) {
       </defs>
 
       {/* sky + horizon glow */}
-      <rect x="0" y="0" width="1200" height="430" fill="url(#cs-sky)" />
-      <ellipse
-        cx="620"
-        cy="430"
-        rx="760"
-        ry="72"
-        fill="#f1caa1"
-        opacity="0.5"
-        filter="url(#cs-soft)"
-      />
+      <rect x="0" y="0" width="1200" height="470" fill="url(#cs-sky)" />
+      <ellipse cx="620" cy="470" rx="780" ry="74" fill="#f1caa1" opacity="0.5" filter="url(#cs-soft)" />
 
       {/* clouds */}
       <g filter="url(#cs-cloud)" fill="#8b8797">
-        <ellipse cx="770" cy="374" rx="132" ry="15" opacity="0.34" />
-        <ellipse cx="930" cy="360" rx="92" ry="12" opacity="0.3" />
-        <ellipse cx="1050" cy="382" rx="70" ry="13" opacity="0.28" />
+        <ellipse cx="770" cy="410" rx="132" ry="15" opacity="0.32" />
+        <ellipse cx="930" cy="396" rx="92" ry="12" opacity="0.28" />
+        <ellipse cx="1050" cy="418" rx="70" ry="13" opacity="0.26" />
       </g>
       <path
-        d="M120 118 C 360 104 620 118 900 100"
+        d="M120 150 C 360 136 620 150 900 132"
         stroke="#8f8b99"
         strokeWidth="3"
         strokeLinecap="round"
         fill="none"
-        opacity="0.16"
+        opacity="0.15"
       />
       <path
-        d="M240 176 C 430 168 600 178 780 166"
+        d="M240 208 C 430 200 600 210 780 198"
         stroke="#8f8b99"
         strokeWidth="2.4"
         strokeLinecap="round"
         fill="none"
-        opacity="0.12"
+        opacity="0.11"
       />
 
       {/* sea */}
-      <rect x="0" y="430" width="1200" height="330" fill="url(#cs-sea)" />
-      <rect x="770" y="430" width="230" height="210" fill="url(#cs-refl)" opacity="0.55" />
-      <line x1="0" y1="430" x2="1200" y2="430" stroke={INK} strokeWidth="1.1" opacity="0.5" />
+      <rect x="0" y="470" width="1200" height="330" fill="url(#cs-sea)" />
+      <rect x="770" y="470" width="230" height="220" fill="url(#cs-refl)" opacity="0.5" />
+      <line x1="0" y1="470" x2="1200" y2="470" stroke={INK} strokeWidth="1.1" opacity="0.45" />
       {WAVES}
 
       {/* headland */}
       <path d={HEADLAND} fill={INK} opacity="0.92" />
-      <ellipse cx="596" cy="424" rx="18" ry="9" fill={INK} opacity="0.92" />
-      <ellipse cx="628" cy="428" rx="12" ry="7" fill={INK} opacity="0.92" />
+      <ellipse cx="596" cy="464" rx="18" ry="9" fill={INK} opacity="0.92" />
+      <ellipse cx="628" cy="468" rx="12" ry="7" fill={INK} opacity="0.92" />
 
       {/* boats */}
-      <Boat x={1012} y={428} s={1} />
-      <Boat x={872} y={429} s={0.82} />
-      <line x1="1012" y1="430" x2="1012" y2="448" stroke={INK} strokeWidth="1" opacity="0.22" />
-      <line x1="872" y1="430" x2="872" y2="445" stroke={INK} strokeWidth="1" opacity="0.2" />
-
-      {/* top scrim so the headline always sits on a clean field */}
-      {hero && <rect x="0" y="0" width="1200" height="300" fill="url(#cs-scrim)" />}
+      <Boat x={1012} y={468} s={1} />
+      <Boat x={872} y={469} s={0.82} />
+      <line x1="1012" y1="470" x2="1012" y2="488" stroke={INK} strokeWidth="1" opacity="0.2" />
+      <line x1="872" y1="470" x2="872" y2="485" stroke={INK} strokeWidth="1" opacity="0.18" />
     </svg>
   );
 }

@@ -303,40 +303,53 @@ limiter, and non-root users before exposing this beyond localhost.
 
 ## Benchmark results
 
-> Run the scripts (see step 5 above) and paste the generated tables here. Both
-> scripts write to `docs/benchmarks/` (git-ignored — numbers are hardware- and
-> dataset-specific).
+Measured on the full WIDER FACE validation set (3,226 images / 39,112
+annotated faces) and the ONNX export, both on a laptop CPU. Full reports with
+methodology notes: [widerface.md](docs/benchmarks/widerface.md),
+[onnx-latency.md](docs/benchmarks/onnx-latency.md).
 
 ### WIDER FACE (validation) — detector comparison
 
 _From `scripts/benchmark_widerface.py`. Metric is a reproducible greedy-IoU
-single pass, **not** the official WIDER Easy/Medium/Hard AP — the report says so._
+single pass, **not** the official WIDER Easy/Medium/Hard AP — see the report
+for why, and for a methodology check (a per-image detection cap was raised and
+re-run to confirm it wasn't skewing RetinaFace's numbers — it wasn't, <1 point
+of movement)._
 
 | Detector | Backbone | Precision @0.5 | Recall @0.5 | AP | Mean FPS | Median latency (ms) |
 |---|---|---|---|---|---|---|
-| RetinaFace | MobileNet0.25 | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
-| RetinaFace | ResNet50 | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
-| YOLOv8-face | n | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| RetinaFace | MobileNet0.25 | 0.889 | 0.334 | 0.434 | 9.3 | 95.0 |
+| YOLOv8-face | n | **0.978** | **0.433** | **0.644** | 5.0 | 129.4 |
 
 Recall by face size (`max(w,h)` px):
 
 | Detector | small (<32) | medium (32–96) | large (>96) |
 |---|---|---|---|
-| RetinaFace (MobileNet0.25) | _TBD_ | _TBD_ | _TBD_ |
-| YOLOv8-face (n) | _TBD_ | _TBD_ | _TBD_ |
+| RetinaFace (MobileNet0.25) | 0.374 | 0.924 | 0.980 |
+| YOLOv8-face (n) | **0.562** | 0.941 | 0.978 |
 
-_Hardware: TBD · Command: `python scripts/benchmark_widerface.py --data-root <path>`_
+**YOLOv8-face is more accurate on every metric here**, most notably on small
+faces; **RetinaFace (MobileNet0.25) is faster**, which tracks — it's the
+~1.7 MB backbone the upstream authors built for CPU/edge speed, not accuracy.
+Recall reads low in absolute terms (33–43%) because it's counting *every*
+annotated face, including the extremely dense, few-pixel faces WIDER FACE's
+official protocol splits into a separate "Hard" subset; medium/large recall
+(92–98% for both) is the more relevant number for this app's use case.
+
+_Hardware: 11th Gen Intel Core i5-1135G7 (CPU only) · Command:
+`python scripts/benchmark_widerface.py --data-root <path>`_
 
 ### PyTorch vs ONNX Runtime — YOLOv8-face latency
 
-_From `scripts/export_onnx.py`._
+_From `scripts/export_onnx.py` — full report in [docs/benchmarks/onnx-latency.md](docs/benchmarks/onnx-latency.md)._
 
 | Runtime | Mean (ms) | p50 (ms) | p95 (ms) | FPS | Speedup |
 |---|---|---|---|---|---|
-| PyTorch (YOLOv8-face) | _TBD_ | _TBD_ | _TBD_ | _TBD_ | 1.00× |
-| ONNX Runtime | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
+| PyTorch (YOLOv8-face) | 185.5 | 166.6 | 265.0 | 5.4 | 1.00× |
+| ONNX Runtime | 99.9 | 100.2 | 108.0 | 10.0 | **1.86×** |
 
-_Hardware: TBD · Command: `python scripts/export_onnx.py`_
+_100 timed inferences each after warmup; `detector.detect()` (letterbox + forward
++ decode + NMS). CPU — 11th Gen Intel Core i5-1135G7. Command: `python scripts/export_onnx.py`._
 
 ---
 

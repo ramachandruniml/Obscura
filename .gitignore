@@ -28,9 +28,7 @@ backend/weights/*
 data/
 *.log
 
-# Benchmark outputs (generated)
-docs/benchmarks/*.md
-!docs/benchmarks/.gitkeep
+# Benchmark reports are committed once real numbers are in (see docs/benchmarks/).
 
 # Datasets
 datasets/
